@@ -38,7 +38,7 @@ const Movies = () =>{
         }
 
         try{
-            let response = await fetch(`http://localhost:8080/movies`, requestOptions);
+            let response = await fetch(`/movies`, requestOptions);
             
             let data = await response.json()
 

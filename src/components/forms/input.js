@@ -9,7 +9,7 @@ const Input = forwardRef((props, ref) => {
             <input 
             type={props.type}
             className={props.className}
-            id={props.id}
+            id={props.name}
             ref={ref}
             name={props.name}
             placeholder={props.placeholder}

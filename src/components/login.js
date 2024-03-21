@@ -1,32 +1,67 @@
 import { useState } from "react";
-import  Input  from "./forms/input";
 import { useNavigate, useOutletContext } from "react-router-dom";
+import  Input  from "./forms/input";
+
 
 const Login = () =>{
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    const {setJwtToken, setAlertMessage, setAlertClassName } = useOutletContext();
+    
+    const { setJwtToken } = useOutletContext();
+    const { setAlertClassName } = useOutletContext();
+    const { setAlertMessage } = useOutletContext();
+    const { toggleRefresh } = useOutletContext();
+
+
+
 
     const navigate = useNavigate();
     
 
 
-    const handleSubmit = (e) =>{
+    const handleSubmit = async (e) =>{
         e.preventDefault();        
-        console.log("email/pass", email, password)
+       
+        // build the request payload
+        let payload = {
+            email: email,
+            password: password,
+        }
 
-        if (email === "admin@example.com"){
-            setJwtToken("abc");
-            setAlertClassName("d-none");
-            setAlertMessage("");
-            navigate("/");
-        }else{
+        const requestOptions = {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(payload),
+        }
+        
+        try{
+            let response = await fetch(`/authenticate`, requestOptions);
+            
+            let data = await response.json()        
+            
+
+            if (data.error){
+                setAlertClassName("alert-danger");
+                setAlertMessage(data.message);
+            }else{
+                setJwtToken(data.access_token);
+                setAlertClassName("d-none");
+                setAlertMessage("");
+                toggleRefresh(true);
+                navigate("/");
+
+            }
+        }catch(err){
             setAlertClassName("alert-danger");
-            setAlertMessage("Invalid credentials");
+            setAlertMessage(err);
         }
     }
+
 
     return(        
         <div className="col-md-6 offset-md-3">

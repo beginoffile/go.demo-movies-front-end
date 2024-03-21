@@ -1,20 +1,110 @@
 import { Link, Outlet, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Alert from './components/alert';
 
 
 function App() {
   
+  
   const [jwtToken, setJwtToken] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
   const [alertClassName, setAlertClassName] = useState("d-none");
 
+  
+  const[tickInterval, setTickInterval] = useState();
+
   const navigate = useNavigate();
 
-  const logOut = () =>{
-    setJwtToken("");
-    navigate("/login")
+  const logOut = async () =>{
+    // setJwtToken("");
+    const requestOptions = {
+      method: "GET",
+      credentials: "include",
+    }
+
+    try{
+      await fetch('/logout', requestOptions);
+    }catch(e){
+      console.log("error loggin out",e);
+    } finally{
+      setJwtToken("");
+      toggleRefresh(false);
+      
+    }
+
+    navigate("/login");
   }
+
+  const toggleRefresh = useCallback( (status) => {
+    console.log("clicked");
+
+    if (status){
+      console.log("turning on ticking")
+      let i = setInterval(async ()=>{
+        console.log("this will run every second");
+        
+        const requestOptions = {
+          method: "GET",
+          credentials: "include",        
+        }
+
+        try{        
+          let response = await fetch('/refresh', requestOptions)
+          let data = await response.json();
+          console.log(data)
+          if (data.access_token){
+            setJwtToken(data.access_token);            
+          }
+        }
+        catch(e){
+          console.log('user is not logged in');
+        }
+      },600000);
+
+      setTickInterval(i)
+
+      console.log("setting tick interval interval to", i)
+
+    }else{
+
+      console.log("turning off ticking")
+      console.log("turning off tickInterval",tickInterval);
+      setTickInterval(null);
+      clearInterval(tickInterval);
+      
+    }
+  },[tickInterval])
+
+  
+
+  useEffect(()=>
+  {
+    async function fetchData(){
+      if (jwtToken === "") {
+        const requestOptions = {
+          method: "GET",
+          credentials: "include",        
+        }
+
+        try{        
+          let response = await fetch('/refresh', requestOptions)
+          let data = await response.json();
+          console.log(data)
+          if (data.access_token){
+            setJwtToken(data.access_token)
+            toggleRefresh(true);
+          }
+        }
+        catch(e){
+          console.log('user is not logged in');
+        }
+      }
+    }
+    fetchData()
+  },[jwtToken, toggleRefresh]
+  )
+
+  
 
   return (    
     <div className="container">
@@ -59,7 +149,8 @@ function App() {
           <Outlet context={{
             jwtToken, setJwtToken,
             setAlertClassName,
-            setAlertMessage
+            setAlertMessage,
+            toggleRefresh,
           }}/>
         </div>
 
