@@ -147,7 +147,8 @@ function App() {
            className={alertClassName}
           />
           <Outlet context={{
-            jwtToken, setJwtToken,
+            jwtToken, 
+            setJwtToken,
             setAlertClassName,
             setAlertMessage,
             toggleRefresh,
