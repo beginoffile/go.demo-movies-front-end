@@ -37,6 +37,7 @@ function App() {
 
   const toggleRefresh = useCallback( (status) => {
     console.log("clicked");
+    console.log("status",status);
 
     if (status){
       console.log("turning on ticking")
@@ -59,7 +60,7 @@ function App() {
         catch(e){
           console.log('user is not logged in');
         }
-      },600000);
+      },300000);
 
       setTickInterval(i)
 
