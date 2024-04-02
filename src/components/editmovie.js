@@ -16,10 +16,10 @@ const EditMovie = () =>{
     const mpaaOptions = [
         {id: "G", value:"G"},
         {id: "PG", value:"PG"},
-        {id: "PG13", value:"PG13"},
+        {id: "PG-13", value:"PG-13"},
         {id: "R", value:"R"},
-        {id: "NC17", value:"NC17"},
-        {id: "18A", value:"18A"},
+        {id: "NC-17", value:"NC-17"},
+        {id: "18-A", value:"18-A"},
     ]
 
     const hasError = (key) =>{
@@ -93,6 +93,45 @@ const EditMovie = () =>{
         }
         else{
             //editing an existing movie
+            const headers = new Headers();
+            headers.append("Content-Type", "application/json");
+            headers.append("Authorization", `Bearer ${jwtToken}`);
+
+            const requestOptions = {
+                method: "GET",
+                headers: headers
+            }
+    
+            try{
+                let response = await fetch(`/admin/movies/${id}`, requestOptions);            
+
+                if (response.status !== 200){
+                    setError(`Invalid response code: ${response.status}`);
+                }else{
+                    let data = await response.json();
+                    //fix release date
+                    data.movie.release_date = new Date(data.movie.release_date).toISOString().split('T')[0];
+                    
+                    const checks = [];
+                    data.genres.forEach(element => {
+                        if (data.movie.genres_array.indexOf(element.id) !== -1){
+                            checks.push({id: element.id, checked: true, genre: element.genre});
+                        }else{
+                            checks.push({id: element.id, checked: false, genre: element.genre});
+                        }
+                    });
+
+                    setMovie( {
+                        ...data.movie,
+                        genres: checks,                        
+                    })
+                }
+                
+            }catch(err){
+                console.log(err);
+            }
+            
+
         }
 
     }
@@ -100,7 +139,7 @@ const EditMovie = () =>{
     },[id, jwtToken, navigate])
 
 
-    const handleSubmit = (e)=>{
+    const handleSubmit = async (e)=>{
         e.preventDefault();
 
         let errors = [];
@@ -136,6 +175,49 @@ const EditMovie = () =>{
             return false;
         }
 
+        // passed validation , so save changes
+        await SaveReg();
+    }
+
+    const SaveReg = async () =>{
+        const headers = new Headers();
+        headers.append("Content-Type","application/json");
+        headers.append("Authorization", "Bearer " + jwtToken);
+
+        let method = "PUT"
+
+        if (movie.id > 0){
+            method = "PATCH"
+        }
+
+        const requestBody = movie;
+        //we need to convert the values in JSON for release date (to date)
+        //and for runtime to int
+        requestBody.release_date = new Date(movie.release_date);
+        requestBody.runtime = parseInt(movie.runtime, 10);
+
+        
+
+        let requestOptions = {
+            body: JSON.stringify(requestBody),
+            method: method,
+            headers: headers,
+            credentials: "include"
+        }
+
+        try{
+            let response = await fetch(`/admin/movies/${movie.id}`, requestOptions);            
+
+            let data = await response.json()
+
+            if (data.error){
+                console.log(data.error);
+            }else{
+                navigate("/manage-catalogue");
+            }            
+        }catch(err){
+            console.log(err);
+        }
     }
 
     const handleChange = () => (e) =>{
@@ -219,6 +301,7 @@ const EditMovie = () =>{
                     title={"MPAA Rating"}
                     name={"mpaa_rating"}
                     options={mpaaOptions}
+                    value={movie.mpaa_rating}
                     onChange={handleChange("mpaa_rating")}
                     placeHolder={"Choose..."}
                     errorMsg={"Please choose"}
@@ -227,7 +310,7 @@ const EditMovie = () =>{
 
                 <TextArea
                     title="Description"
-                    name={"Description"}
+                    name={"description"}
                     value={movie.description}
                     rows={"3"}
                     onChange={handleChange("description")}
