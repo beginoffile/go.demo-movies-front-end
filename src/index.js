@@ -11,6 +11,7 @@ import GraphQL from './components/graphql';
 import Login from './components/login';
 import App from './App';
 import Movie from './components/movie';
+import OneGenre from './components/onegenre';
 
 
 
@@ -32,6 +33,10 @@ const router = createBrowserRouter([
       {
         path: "/genres",
         element: <Genres/>,
+      },
+      {
+        path: "/genres/:id",
+        element: <OneGenre/>,
       },
       {
         path: "/admin/movie/0",

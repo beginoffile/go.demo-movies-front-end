@@ -27,7 +27,9 @@ const Movies = () =>{
     //     setMovies(movieList);
     // },[])
 
-    useEffect(() => {async function fetchData(){
+    useEffect(() => {
+        
+        const fetchData= async () => {
         const headers = new Headers();
         headers.append("Content-Type", "application/json");
         
@@ -40,25 +42,28 @@ const Movies = () =>{
         try{
             let response = await fetch(`/movies`, requestOptions);
             
-            let data = await response.json()
+            let data = await response.json()   
+            
+            if (data){
+                setMovies(data)
+            }
 
-                     
-
-            setMovies(data)
         }catch(err){
             console.log(err);
         }
 
 
-    }    
-    fetchData();
+    };
+     fetchData();
     },[])
 
+    
     return(        
+        
         <div>
             <h2>Movies </h2>
             <hr/>
-            <table className="table table-striped table-hover">
+            {movies ? (<table className="table table-striped table-hover">
                 <thead>
                     <tr>
                         <th>Movie</th>
@@ -67,6 +72,7 @@ const Movies = () =>{
                     </tr>
                 </thead>
                 <tbody>
+                    {console.log(movies)}
                     {movies.map((m)=>(
                         <tr key={m.id}>
                             <td>
@@ -78,7 +84,10 @@ const Movies = () =>{
                     ))}
                 </tbody>
             </table>
-           
+           ) :
+                ( <p>No movies yet!!</p>)
+            }
+            
         </div>        
     )
 

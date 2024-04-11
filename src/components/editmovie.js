@@ -16,10 +16,10 @@ const EditMovie = () =>{
     const mpaaOptions = [
         {id: "G", value:"G"},
         {id: "PG", value:"PG"},
-        {id: "PG-13", value:"PG-13"},
+        {id: "PG13", value:"PG13"},
         {id: "R", value:"R"},
-        {id: "NC-17", value:"NC-17"},
-        {id: "18-A", value:"18-A"},
+        {id: "NC17", value:"NC17"},
+        {id: "18A", value:"18A"},
     ]
 
     const hasError = (key) =>{
@@ -76,11 +76,13 @@ const EditMovie = () =>{
                 let response = await fetch(`/genres`, requestOptions);            
     
                 let data = await response.json()
+
     
                 const checks = [];
                 data.forEach(element => {
-                    checks.push({id: element.ID, checked: false, genre: element.genre});
+                    checks.push({id: element.id, checked: false, genre: element.genre});
                 });
+
                 setMovie( m=>({
                     ...m,
                     genres: checks,
@@ -205,6 +207,8 @@ const EditMovie = () =>{
             credentials: "include"
         }
 
+        
+
         try{
             let response = await fetch(`/admin/movies/${movie.id}`, requestOptions);            
 
@@ -253,10 +257,55 @@ const EditMovie = () =>{
         })
     }
 
+    const confirmDelete = () =>{
+        Swal.fire({
+            title: "Delete movie?",
+            text: "You cannot undo this action",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!"
+          }).then((result) => {
+            if (result.isConfirmed) {
+                deleteReg();
+            }
+          });
+    }
+
+    const deleteReg = async () =>{
+        const headers = new Headers();
+        headers.append("Content-Type","application/json");
+        headers.append("Authorization", "Bearer " + jwtToken);
+        
+
+        let requestOptions = {
+            method: "DELETE",
+            headers: headers,
+            credentials: "include"
+        }
+
+        try{
+            let response = await fetch(`/admin/movies/${movie.id}`, requestOptions);            
+
+            let data = await response.json()
+
+            if (data.error){
+                console.log(data.error);
+            }else{
+                navigate("/manage-catalogue");
+            }            
+        }catch(err){
+            console.log(err);
+        }
+    }
+    
+      
+
     if (error != null){
         return <div>Error: {error.message}</div>;
     }else{
-
+        
         return(        
             <div>
                 <h2> Add/Edit Movie</h2>
@@ -321,6 +370,7 @@ const EditMovie = () =>{
                     />
                     <hr/>
                     <h3>Genres</h3>
+
     
                     {movie.genres && movie.genres.length > 1 && 
                     <>
@@ -342,6 +392,9 @@ const EditMovie = () =>{
                     }
                     <hr/>
                     <button className="btn btn-primary">Save</button>
+                    {movie.id > 0 && 
+                        <a href="#!" className="btn btn-danger ms-2" onClick={confirmDelete}>Delete Movie</a>
+                    }
     
                 </form>
                
